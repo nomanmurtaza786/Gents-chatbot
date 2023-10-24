@@ -23,7 +23,7 @@ def get_vector_store_retriever() :
 def saveToSupabase(content: str, metadata: dict, embedding: list):
     response = supabaseClient.table("documents").upsert({"content": content, "metadata": metadata, "embedding": embedding}).execute()
     
-def saveVectorSupabase(docs: list):
+def saveDocVectorSupabase(docs: list):
      supabaseVec=vector_store.from_documents(docs, embeddings, client=supabaseClient, table_name="documents")
 
      
