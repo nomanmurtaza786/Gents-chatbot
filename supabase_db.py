@@ -1,11 +1,10 @@
 import os
 
 from dotenv import load_dotenv
-from supabase.client import Client, create_client
-
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.schema.embeddings import Embeddings
 from langchain.vectorstores import SupabaseVectorStore
+from supabase.client import Client, create_client
 
 load_dotenv()
 
@@ -28,7 +27,7 @@ def saveDocVectorSupabase(docs: list):
 
      
 def getSimilarDocuments(text: str):
-      vector_store.similarity_search(text, 2)
+      return vector_store.similarity_search(text, 10)
      
 
     

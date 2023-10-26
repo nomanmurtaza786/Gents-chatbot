@@ -4,7 +4,8 @@ import openai
 import streamlit as st
 from dotenv import load_dotenv
 
-from chains_bot import get_answer
+from chains_bot import get_answer, get_answer_from_agent, run_multiple_agents
+from supabase_db import getSimilarDocuments
 
 load_dotenv()
 
@@ -28,7 +29,7 @@ if prompt := st.chat_input("What is up?"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        response = get_answer(prompt, [])
+        response = get_answer(prompt)
         st.markdown(response)
         st.session_state.messages.append({"role": "assistant", "content": response})
         
