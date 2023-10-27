@@ -10,13 +10,12 @@ from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI
 from langchain.prompts.prompt import PromptTemplate
 from langchain.sql_database import SQLDatabase
-
+from key_store import (OPENAI_API_KEY, DB_CONNECTION_STR)
 from supabase_db import get_vector_store_retriever
 
 load_dotenv()
 
-openApiKey: str = os.getenv("OPENAI_API_KEY", "default_key")
-huggingFaceApikey = os.getenv("API_KEY", "default_key")
+openApiKey: str = OPENAI_API_KEY
 openAillm = OpenAI(
     model="text-davinci-003",
     openai_api_key=openApiKey,
@@ -32,22 +31,22 @@ chatLLM = ChatOpenAI(temperature=0.1,)
 llm_chain = LLMChain(llm=chatLLM, prompt=prompt,verbose=True,)
 #print("predict", chatLLM.predict('Captial of USA'))
 
-crc = ConversationalRetrievalChain.from_llm(llm=chatLLM, retriever=get_vector_store_retriever(), verbose=True, )
+def getcrc(other,user:str =None):
+    return( ConversationalRetrievalChain.from_llm(llm=chatLLM, retriever=get_vector_store_retriever(user), verbose=True, ))(other)
 
 api_chain = APIChain.from_llm_and_api_docs(llm=chatLLM, api_docs='' ,verbose=True,)
 
 
-def get_answer(question: str, chat_history: list = []):
-    result = crc({"question": question, "chat_history": chat_history})
+def get_answer(question: str,user:str, chat_history: list = []):
+    result = getcrc({"question": question, "chat_history": chat_history},user)
     return result
 
 def callingApiChain(question: str, chat_history: list):
-    result = crc({"question": question, "chat_history": chat_history})
+    result = getcrc({"question": question, "chat_history": chat_history})
     return result["answer"]
 
-## database connect string from env file
-db_connect_string = os.getenv("DB_Connection_Str", "default_key")
-db = SQLDatabase.from_uri("postgresql://postgres:postgres@localhost:5432/HR")
+
+db = SQLDatabase.from_uri(DB_CONNECTION_STR)
 toolkit = SQLDatabaseToolkit(db=db, llm=OpenAI(temperature=0))
 
 agent_executor = create_sql_agent(
@@ -69,8 +68,8 @@ tools = [
         
     ),
       Tool(
-        name="resume_reader",
-        description='use to read resume and extract information such as name, email, phone, skills, etc.',
+        name="doc_reader",
+        description='use to read resume and extract information such as name, email, phone, skills, etc., also used to read tickets and read other documents and answer ques',
         func=get_answer,
     )
 ]
@@ -81,4 +80,3 @@ agents = initialize_agent(tools=tools, verbose=True,  llm=ChatOpenAI(temperature
 def run_multiple_agents(question: str, chat_history: list = []):
     result = agents.run(question)
     return result
-# print("predict", get_answer_from_agent('Tell me best location with respect to employees performance. IF rating A is consider as best performer'))
